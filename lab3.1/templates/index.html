@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Image Classification</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin: 50px;
+      }
+      #preview {
+        margin-top: 20px;
+        max-width: 300px;
+        display: none;
+      }
+      #result {
+        margin-top: 20px;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Upload Image for Classification</h1>
+    <form id="uploadForm">
+      <input type="file" id="fileInput" accept="image/*" required />
+      <button type="submit">Upload</button>
+    </form>
+    <img id="preview" src="" alt="Image Preview" />
+    <div id="result"></div>
+
+    <script>
+      document
+        .getElementById("fileInput")
+        .addEventListener("change", function (event) {
+          const file = event.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+              document.getElementById("preview").src = e.target.result;
+              document.getElementById("preview").style.display = "block";
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+
+      document
+        .getElementById("uploadForm")
+        .addEventListener("submit", async function (event) {
+          event.preventDefault();
+          const file = document.getElementById("fileInput").files[0];
+          if (!file) return;
+
+          const formData = new FormData();
+          formData.append("file", file);
+          document.getElementById("result").textContent = "Processing...";
+
+          try {
+            const response = await fetch("http://127.0.0.1:5000/predict", {
+              method: "POST",
+              body: formData,
+            });
+
+            if (!response) {
+              throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            // Cập nhật UI với predicted_class và predicted_label
+            document.getElementById(
+              "result"
+            ).textContent = `Prediction: ${data.predicted_label} (Class ID: ${data.predicted_class})`;
+          } catch (error) {
+            document.getElementById(
+              "result"
+            ).textContent = `Error: ${error.message}`;
+          }
+        });
+    </script>
+  </body>
+</html>
